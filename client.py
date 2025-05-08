@@ -1,8 +1,6 @@
 import socket
 import threading
 import pyaudio
-import numpy as np
-import noisereduce as nr
 from config import config
 
 CHUNK = 2048  # Размер чанка
@@ -16,23 +14,11 @@ stream = p.open(format=pyaudio.paInt16, channels=1, rate=SAMPLE_RATE, input=True
 s = socket.socket()
 s.connect((config.HOST, config.PORT))
 
-def apply_noise_reduction(audio_data):
-    # Применение шумоподавления с помощью noisereduce
-    reduced_noise = nr.reduce_noise(y=audio_data, sr=SAMPLE_RATE)
-    return reduced_noise
-
 def record_and_send_audio():
     while True:
         try:
-            # Чтение данных с микрофона
             data = stream.read(CHUNK)
-            audio_data = np.frombuffer(data, dtype=np.int16)
-
-            # Применяем шумоподавление
-            processed_audio_data = apply_noise_reduction(audio_data)
-
-            # Отправляем обработанные данные на сервер
-            s.send(processed_audio_data.tobytes())
+            s.send(data)
 
         except Exception as e:
             print(f"Ошибка при обработке или отправке аудио: {e}")
